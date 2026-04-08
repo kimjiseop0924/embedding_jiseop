@@ -3,32 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커스텀 단어 연산 분석기</title>
+    <title>단어 연산 분석기</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --main-blue: #007bff; --bg-blue: #f0f7ff; --dark-blue: #0056b3; }
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f9f9f9; padding: 20px; }
-        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        :root { --main-blue: #0056b3; --light-blue: #e7f3ff; --bg-color: #f4f7fa; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg-color); color: #333; padding: 20px; }
+        .container { max-width: 750px; margin: 0 auto; background: white; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
-        .header { text-align: center; margin-bottom: 30px; }
-        h1 { color: var(--dark-blue); }
-        .info-box { background: var(--bg-blue); padding: 20px; border-radius: 12px; margin-bottom: 25px; font-size: 0.95em; }
+        /* 헤더 & 설명 */
+        .header { text-align: center; border-bottom: 2px solid var(--light-blue); margin-bottom: 25px; padding-bottom: 15px; }
+        h1 { color: var(--main-blue); margin-bottom: 5px; }
+        .intro-box { background: var(--light-blue); padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 0.95em; }
         
-        .input-row { display: flex; align-items: center; margin-bottom: 10px; gap: 10px; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        
+        /* 입력창 스타일 */
+        .input-row { display: flex; align-items: center; margin-bottom: 10px; gap: 10px; }
         .tag { font-weight: bold; width: 35px; text-align: center; padding: 8px 0; border-radius: 6px; }
-        .plus { background: #e1f5fe; color: #0288d1; }
-        .minus { background: #ffebee; color: #d32f2f; }
+        .plus { background: #d4edda; color: #155724; }
+        .minus { background: #f8d7da; color: #721c24; }
         
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        button { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.2s; }
-        .btn-add { padding: 10px 20px; background: white; border: 2px solid var(--main-blue); color: var(--main-blue); margin-right: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .btn-add { padding: 8px 15px; background: white; border: 1px solid var(--main-blue); color: var(--main-blue); margin-right: 5px; }
         .btn-add:hover { background: var(--main-blue); color: white; }
-        .btn-del { padding: 10px; background: #eee; color: #666; }
-        .btn-main { width: 100%; padding: 15px; background: var(--dark-blue); color: white; margin-top: 20px; font-size: 1.1em; }
+        .btn-del { padding: 8px 12px; background: #eee; color: #666; }
+        .btn-analyze { width: 100%; padding: 15px; background: var(--main-blue); color: white; font-size: 1.1em; margin-top: 20px; }
         
-        canvas { margin-top: 30px; max-height: 350px; }
+        canvas { margin-top: 30px; }
     </style>
 </head>
 <body>
@@ -36,21 +36,20 @@
 <div class="container">
     <div class="header">
         <h1>단어 연산 분석기에 오신 것을 환영합니다!</h1>
-        <p>인공지능의 방식으로 단어를 계산해보세요.</p>
+        <p>인공지능의 방식으로 단어를 계산하고 유사도를 비교해보세요.</p>
     </div>
 
-    <div class="info-box">
-        <h3>📖 도움말</h3>
-        <p><b>임베딩(Embedding):</b> 단어를 숫자로 바꾸는 기술입니다. 숫자가 되면 단어끼리 더하고 뺄 수 있어요!</p>
-        <p><b>분석 과정:</b> 단어들을 계산한 결과(위치)가 내가 입력한 후보 단어들과 얼마나 가까운지 '유사도'를 측정합니다.</p>
+    <div class="intro-box">
+        <b>💡 임베딩(Embedding)이란?</b><br>
+        단어를 숫자로 바꿔서 컴퓨터가 계산할 수 있게 만드는 기술이에요. 비슷한 뜻을 가진 단어들은 숫자 세계에서도 서로 가까운 곳에 위치하게 됩니다.
     </div>
 
     <div id="wordList">
         </div>
 
     <div style="text-align: center; margin: 20px 0;">
-        <button class="btn-add" onclick="addRow('plus')">+ 항목 추가</button>
-        <button class="btn-add" onclick="addRow('minus')">- 항목 추가</button>
+        <button class="btn-add" onclick="addRow('plus')">+ 더하기(+) 추가</button>
+        <button class="btn-add" onclick="addRow('minus')">- 빼기(-) 추가</button>
     </div>
 
     <div style="border-top: 1px solid #eee; padding-top: 20px;">
@@ -58,8 +57,7 @@
         <input type="text" id="candidates" style="width: 100%; box-sizing: border-box; margin-top: 10px;" placeholder="예: 여왕, 공주, 왕비">
     </div>
 
-    <button class="btn-main" onclick="analyzeSimilarity()">분석 시작하기</button>
-
+    <button class="btn-analyze" onclick="analyzeSimilarity()">분석 시작하기</button>
     <canvas id="similarityChart"></canvas>
 </div>
 
@@ -70,42 +68,4 @@
         const div = document.createElement('div');
         div.className = 'input-row';
         const symbol = type === 'plus' ? '+' : '-';
-        const colorClass = type === 'plus' ? 'plus' : 'minus';
-        div.innerHTML = `
-            <span class="tag ${colorClass}">${symbol}</span>
-            <input type="text" class="word-input" placeholder="단어를 입력하세요">
-            <button class="btn-del" onclick="this.parentElement.remove()">삭제</button>
-        `;
-        document.getElementById('wordList').appendChild(div);
-    }
-
-    function analyzeSimilarity() {
-        const candidateInput = document.getElementById('candidates').value;
-        if (!candidateInput) return alert("비교할 후보 단어를 적어도 하나 입력해주세요!");
-        
-        const candidates = candidateInput.split(',').map(s => s.trim());
-        const generateData = () => candidates.map(() => (Math.random() * 0.7 + 0.2).toFixed(2));
-
-        const ctx = document.getElementById('similarityChart').getContext('2d');
-        if (myChart) myChart.destroy();
-
-        myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: candidates,
-                datasets: [
-                    { label: '모델 1 (Word2Vec)', data: generateData(), backgroundColor: '#0056b3' },
-                    { label: '모델 2 (FastText)', data: generateData(), backgroundColor: '#66b3ff' },
-                    { label: '모델 3 (GloVe)', data: generateData(), backgroundColor: '#cce5ff' }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 1 } }
-            }
-        });
-    }
-</script>
-
-</body>
-</html>
+        const colorClass = type === '
