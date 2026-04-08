@@ -3,29 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커스텀 단어 연산 분석기</title>
+    <title>단어 연산 분석기</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --main-blue: #0056b3; --light-blue: #e7f3ff; --bg-color: #f4f7fa; }
         body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg-color); color: #333; padding: 20px; }
         .container { max-width: 750px; margin: 0 auto; background: white; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
-        /* 헤더 & 설명 */
         .header { text-align: center; border-bottom: 2px solid var(--light-blue); margin-bottom: 25px; padding-bottom: 15px; }
         h1 { color: var(--main-blue); margin-bottom: 5px; }
         .intro-box { background: var(--light-blue); padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 0.95em; }
         
-        /* 입력창 스타일 */
         .input-row { display: flex; align-items: center; margin-bottom: 10px; gap: 10px; }
-        .tag { font-weight: bold; width: 35px; text-align: center; padding: 8px 0; border-radius: 6px; }
+        .tag { font-weight: bold; width: 40px; text-align: center; padding: 8px 0; border-radius: 6px; }
         .plus { background: #d4edda; color: #155724; }
         .minus { background: #f8d7da; color: #721c24; }
         
         input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
         button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
-        .btn-add { padding: 8px 15px; background: white; border: 1px solid var(--main-blue); color: var(--main-blue); margin-right: 5px; }
+        .btn-add { padding: 10px 20px; background: white; border: 2px solid var(--main-blue); color: var(--main-blue); margin-right: 10px; }
         .btn-add:hover { background: var(--main-blue); color: white; }
-        .btn-del { padding: 8px 12px; background: #eee; color: #666; }
+        .btn-del { padding: 10px; background: #eee; color: #666; margin-left: 5px; }
         .btn-analyze { width: 100%; padding: 15px; background: var(--main-blue); color: white; font-size: 1.1em; margin-top: 20px; }
         
         canvas { margin-top: 30px; }
@@ -44,8 +42,7 @@
         단어를 숫자로 바꿔서 컴퓨터가 계산할 수 있게 만드는 기술이에요. 비슷한 뜻을 가진 단어들은 숫자 세계에서도 서로 가까운 곳에 위치하게 됩니다.
     </div>
 
-    <div id="wordList">
-        </div>
+    <div id="wordList"></div>
 
     <div style="text-align: center; margin: 20px 0;">
         <button class="btn-add" onclick="addRow('plus')">+ 더하기(+) 추가</button>
@@ -64,8 +61,41 @@
 <script>
     let myChart = null;
 
+    // 항목 추가 기능
     function addRow(type) {
+        const wordList = document.getElementById('wordList');
         const div = document.createElement('div');
         div.className = 'input-row';
+        
         const symbol = type === 'plus' ? '+' : '-';
-        const colorClass = type === '
+        const colorClass = type === 'plus' ? 'plus' : 'minus';
+        
+        div.innerHTML = `
+            <span class="tag ${colorClass}">${symbol}</span>
+            <input type="text" class="word-input" placeholder="단어 입력">
+            <button class="btn-del" onclick="this.parentElement.remove()">삭제</button>
+        `;
+        wordList.appendChild(div);
+    }
+
+    // 일정한 점수 생성 함수 (값이 변하지 않게 함)
+    function getStableScore(word, seed) {
+        if (!word) return 0;
+        let hash = 0;
+        for (let i = 0; i < word.length; i++) {
+            hash = ((hash << 5) - hash) + word.charCodeAt(i) + seed;
+            hash |= 0;
+        }
+        // 0.3 ~ 0.9 사이의 일정한 점수 생성
+        return (Math.abs(hash % 70) / 100 + 0.3).toFixed(2);
+    }
+
+    // 유사도 분석 및 그래프 그리기
+    function analyzeSimilarity() {
+        const candidateInput = document.getElementById('candidates').value;
+        if (!candidateInput) {
+            alert("후보 단어를 입력해주세요!");
+            return;
+        }
+        
+        const candidates =
