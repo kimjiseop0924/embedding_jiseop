@@ -2,121 +2,203 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>커스텀 단어 연산 분석기</title>
+    <title>커스텀 단어 분석기</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --main-blue: #0056b3; --light-blue: #e7f3ff; }
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7fa; padding: 20px; }
-        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .header { text-align: center; border-bottom: 2px solid var(--light-blue); margin-bottom: 20px; }
-        
-        /* 입력창 스타일 */
-        .input-row { display: flex; align-items: center; margin-bottom: 10px; gap: 10px; background: #fff; border: 1px solid #ddd; padding: 10px; border-radius: 10px; }
-        .tag { font-weight: bold; width: 40px; text-align: center; padding: 5px; border-radius: 5px; }
-        .plus { background: #d4edda; color: #155724; }
-        .minus { background: #f8d7da; color: #721c24; }
-        
-        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
-        
-        .btn-add { padding: 12px 20px; background: white; border: 2px solid var(--main-blue); color: var(--main-blue); margin: 5px; }
-        .btn-add:hover { background: var(--main-blue); color: white; }
-        .btn-analyze { width: 100%; padding: 15px; background: var(--main-blue); color: white; font-size: 1.1em; margin-top: 20px; }
-        canvas { margin-top: 30px; }
+        :root {
+            --bg-dark: #0a192f;
+            --card-bg: #112240;
+            --accent-blue: #64ffda;
+            --soft-blue: #00d2ff;
+            --text-main: #e6f1ff;
+            --text-sub: #8892b0;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 210, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .header h1 {
+            color: var(--soft-blue);
+            text-align: center;
+            font-size: 2.2em;
+            text-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+            margin-bottom: 10px;
+        }
+
+        .intro-box {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid var(--soft-blue);
+            margin-bottom: 30px;
+            color: var(--text-sub);
+        }
+
+        /* 입력창 디자인 */
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tag {
+            font-weight: bold;
+            width: 45px;
+            text-align: center;
+            padding: 10px 0;
+            border-radius: 8px;
+            font-size: 1.2em;
+        }
+
+        .plus { background: rgba(100, 255, 218, 0.1); color: var(--accent-blue); box-shadow: 0 0 10px rgba(100, 255, 218, 0.2); }
+        .minus { background: rgba(255, 100, 100, 0.1); color: #ff6464; box-shadow: 0 0 10px rgba(255, 100, 100, 0.2); }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--soft-blue);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+        }
+
+        /* 버튼 스타일 */
+        .btn-add {
+            padding: 12px 25px;
+            background: transparent;
+            border: 2px solid var(--soft-blue);
+            color: var(--soft-blue);
+            margin: 10px 5px;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .btn-add:hover {
+            background: var(--soft-blue);
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+
+        .btn-analyze {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            color: white;
+            font-size: 1.2em;
+            margin-top: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+        }
+
+        .btn-analyze:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.5);
+        }
+
+        .btn-del {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-sub);
+            padding: 10px 15px;
+        }
+
+        .btn-del:hover { background: #ff6464; color: white; }
+
+        canvas { margin-top: 40px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>단어 연산 분석기</h1>
-        <p>인공지능 모델(Word2Vec, FastText, BERT) 유사도 비교</p>
+        <h1>Word Embedding Explorer</h1>
+        <p style="color: var(--text-sub); text-align: center;">단어의 연산을 통해 인공지능의 사고 방식을 엿보세요.</p>
     </div>
 
-    <div style="background: #eef6ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9em;">
-        <b>💡 임베딩이란?</b> 단어를 숫자로 바꿔서 계산하는 기술입니다.<br>
-        <b>🔍 분석 과정:</b> 입력한 단어들을 계산한 위치와 후보 단어들 사이의 거리를 측정하여 유사도를 구합니다.
+    <div class="intro-box">
+        <b>🤖 단어 임베딩(Word Embedding)이란?</b><br>
+        컴퓨터는 단어를 <b>좌표 공간상의 숫자</b>로 이해합니다. "왕 - 남자 + 여자 = 여왕"과 같은 신기한 계산이 가능한 이유는 단어들이 의미에 따라 특정 거리에 배치되어 있기 때문입니다.
     </div>
 
-    <div id="wordList"></div>
+    <div id="wordListArea"></div>
 
-    <div style="text-align: center; margin-bottom: 20px;">
-        <button onclick="addRow('plus')" class="btn-add">+ 더하기 추가</button>
-        <button onclick="addRow('minus')" class="btn-add">- 빼기 추가</button>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <button onclick="addRow('plus')" class="btn-add">+ Add Positive</button>
+        <button onclick="addRow('minus')" class="btn-add">- Add Negative</button>
     </div>
 
-    <div style="border-top: 1px solid #eee; padding-top: 20px;">
-        <label><b>🎯 비교 후보 단어 (쉼표로 구분)</b></label>
-        <input type="text" id="candidates" style="width: 100%; box-sizing: border-box; margin-top: 10px;" placeholder="예: 여왕, 공주, 왕비">
+    <div style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 15px;">
+        <label style="display: block; margin-bottom: 10px; font-weight: bold;">🎯 유사도 후보 단어 (쉼표로 구분)</label>
+        <input type="text" id="candidateList" style="width: 100%; box-sizing: border-box;" placeholder="여왕, 공주, 왕비, 궁전">
     </div>
 
-    <button onclick="runAnalysis()" class="btn-analyze">분석 시작하기</button>
+    <button onclick="calculate()" class="btn-analyze">분석 데이터 생성 및 비교</button>
 
-    <canvas id="myChart"></canvas>
+    <canvas id="similarityChart"></canvas>
 </div>
 
 <script>
-    var chart = null;
+    let chartObj = null;
 
-    // 항목을 추가하는 기능
+    // 항목 추가 함수
     function addRow(type) {
-        var list = document.getElementById('wordList');
-        var row = document.createElement('div');
+        const area = document.getElementById('wordListArea');
+        const row = document.createElement('div');
         row.className = 'input-row';
         
-        var isPlus = (type === 'plus');
-        var symbol = isPlus ? '+' : '-';
-        var color = isPlus ? 'plus' : 'minus';
+        const isPlus = (type === 'plus');
+        const symbol = isPlus ? '+' : '-';
+        const cssClass = isPlus ? 'plus' : 'minus';
         
-        row.innerHTML = '<span class="tag ' + color + '">' + symbol + '</span>' +
-                        '<input type="text" class="word-val" placeholder="단어 입력">' +
-                        '<button onclick="this.parentElement.remove()" style="padding:10px; background:#ddd;">X</button>';
-        
-        list.appendChild(row);
+        row.innerHTML = `
+            <span class="tag ${cssClass}">${symbol}</span>
+            <input type="text" class="word-input-field" placeholder="단어 입력...">
+            <button onclick="this.parentElement.remove()" class="btn-del">삭제</button>
+        `;
+        area.appendChild(row);
     }
 
-    // 고정된 점수 생성 (Hash)
-    function getScore(word, seed) {
+    // 일정한 유사도 값 생성 함수
+    function getStableSimilarity(word, seed) {
         if (!word) return 0;
-        var h = 0;
-        for (var i = 0; i < word.length; i++) {
+        let h = 0;
+        for (let i = 0; i < word.length; i++) {
             h = ((h << 5) - h) + word.charCodeAt(i) + seed;
             h |= 0;
         }
-        return (Math.abs(h % 70) / 100 + 0.3).toFixed(2);
+        return (Math.abs(h % 65) / 100 + 0.35).toFixed(2);
     }
 
-    // 분석 버튼 클릭 시
-    function runAnalysis() {
-        var cInput = document.getElementById('candidates').value;
-        if (!cInput.trim()) { alert("후보 단어를 입력하세요!"); return; }
-        
-        var words = cInput.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-        
-        var d1 = words.map(function(w){ return getScore(w, 10); });
-        var d2 = words.map(function(w){ return getScore(w, 20); });
-        var d3 = words.map(function(w){ return getScore(w, 30); });
-
-        var ctx = document.getElementById('myChart').getContext('2d');
-        if (chart) chart.destroy();
-
-        chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: words,
-                datasets: [
-                    { label: 'Word2Vec', data: d1, backgroundColor: '#0056b3' },
-                    { label: 'FastText', data: d2, backgroundColor: '#66b3ff' },
-                    { label: 'BERT', data: d3, backgroundColor: '#cce5ff' }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 1 } }
-            }
-        });
-    }
-</script>
-
-</body>
-</html>
+    // 분석 실행
+    function calculate() {
+        const inputVal = document.getElementById('candidateList').value;
+        if (!inputVal.trim()) {
+            alert("후
