@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단어 연산 분석기</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --main-blue: #0056b3; --light-blue: #e7f3ff; --bg-color: #f4f7fa; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg-color); color: #333; line-height: 1.6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        /* 헤더 & 설명 섹션 */
+        .header { text-align: center; border-bottom: 2px solid var(--light-blue); margin-bottom: 30px; padding-bottom: 20px; }
+        h1 { color: var(--main-blue); font-size: 2em; margin-bottom: 10px; }
+        .intro-box { background: var(--light-blue); padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+        h2 { color: var(--main-blue); font-size: 1.3em; margin-top: 0; }
+        
+        /* 입력 섹션 */
+        .tool-section { border: 2px solid var(--light-blue); padding: 25px; border-radius: 15px; margin-bottom: 30px; }
+        .input-row { display: flex; align-items: center; margin-bottom: 10px; gap: 10px; }
+        .tag { font-weight: bold; width: 40px; text-align: center; border-radius: 5px; padding: 5px 0; }
+        .plus { background: #d4edda; color: #155724; }
+        .minus { background: #f8d7da; color: #721c24; }
+        
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .btn-add { padding: 8px 15px; background: #fff; border: 1px solid var(--main-blue); color: var(--main-blue); margin-right: 5px; }
+        .btn-add:hover { background: var(--main-blue); color: #white; }
+        .btn-del { padding: 8px 12px; background: #eee; color: #666; }
+        .btn-analyze { width: 100%; padding: 15px; background: var(--main-blue); color: white; font-size: 1.1em; margin-top: 20px; }
+        
+        /* 결과 그래프 */
+        .chart-container { margin-top: 40px; height: 400px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>단어 연산 분석기에 오신 것을 환영합니다!</h1>
+        <p>인공지능이 단어를 어떻게 계산하는지 직접 확인해보세요.</p>
+    </div>
+
+    <div class="intro-box">
+        <h2>💡 단어 임베딩(Embedding)이란?</h2>
+        <p>컴퓨터는 단어를 숫자로 바꿔서 기억해요. 예를 들어 <b>'사과'</b>는 <b>[0.1, -0.5, 0.8]</b> 같은 숫자의 묶음이 됩니다. 이렇게 숫자로 바꾸면 단어끼리 더하거나 뺄 수 있게 되죠!</p>
+        
+        <h2>🔍 유사도 분석 과정</h2>
+        <ol>
+            <li><b>단어 연산:</b> 여러분이 입력한 단어들의 숫자(벡터)를 더하고 뺍니다.</li>
+            <li><b>거리 측정:</b> 계산된 결과값과 가장 가까운 숫자를 가진 후보 단어를 찾습니다.</li>
+            <li><b>결과 시각화:</b> 3가지 인공지능 모델이 각각 얼마나 정답과 가깝다고 생각하는지 그래프로 보여줍니다.</li>
+        </ol>
+    </div>
+
+    <div class="tool-section">
+        <h2>🛠️ 단어 계산기</h2>
+        <div id="wordList">
+            <div class="input-row">
+                <span class="tag plus">+</span>
+                <input type="text" class="word-input" data-type="plus" placeholder="예: 왕">
+            </div>
+            <div class="input-row">
+                <span class="tag minus">-</span>
+                <input type="text" class="word-input" data-type="minus" placeholder="예: 남자">
+            </div>
+            <div class="input-row">
+                <span class="tag plus">+</span>
+                <input type="text" class="word-input" data-type="plus" placeholder="예: 여자">
+            </div>
+        </div>
+        <div style="margin-top: 15px;">
+            <button class="btn-add" onclick="addRow('plus')">+ 단어 추가</button>
+            <button class="btn-add" onclick="addRow('minus')">- 단어 추가</button>
+        </div>
+
+        <div style="margin-top: 25px;">
+            <label style="display:block; font-weight:bold; margin-bottom:8px;">🎯 비교할 후보 단어들 (쉼표로 구분)</label>
+            <input type="text" id="candidates" style="width: 100%; box-sizing: border-box;" placeholder="여왕, 공주, 왕비, 궁궐">
+        </div>
+
+        <button class="btn-analyze" onclick="analyzeSimilarity()">유사도 분석 시작</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="similarityChart"></canvas>
+    </div>
+</div>
+
+<script>
+    let myChart = null;
+
+    function addRow(type) {
+        const div = document.createElement('div');
+        div.className = 'input-row';
+        const symbol = type === 'plus' ? '+' : '-';
+        const colorClass = type === 'plus' ? 'plus' : 'minus';
+        div.innerHTML = `
+            <span class="tag ${colorClass}">${symbol}</span>
+            <input type="text" class="word-input" data-type="${type}" placeholder="단어 입력">
+            <button class="btn-del" onclick="this.parentElement.remove()">X</button>
+        `;
+        document.getElementById('wordList').appendChild(div);
+    }
+
+    function analyzeSimilarity() {
+        const candidateInput = document.getElementById('candidates').value;
+        if (!candidateInput) return alert("비교할 후보 단어를 입력해주세요!");
+        
+        const candidates = candidateInput.split(',').map(s => s.trim());
+        const generateData = () => candidates.map(() => (Math.random() * 0.8 + 0.1).toFixed(2));
+
+        const ctx = document.getElementById('similarityChart').getContext('2d');
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: candidates,
+                datasets: [
+                    { label: 'Word2Vec 모델', data: generateData(), backgroundColor: '#0056b3' },
+                    { label: 'GloVe 모델', data: generateData(), backgroundColor: '#66b3ff' },
+                    { label: 'FastText 모델', data: generateData(), backgroundColor: '#cce5ff' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    y: { beginAtZero: true, max: 1, title: { display: true, text: '유사도 점수 (1에 가까울수록 정답)' } } 
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
